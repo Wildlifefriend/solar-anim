@@ -1,203 +1,190 @@
-﻿
-/************************************************************************************
-
-	File: 			multipleCubes.c
-
-	Description:	A complete OpenGL program to rotate cubes with color interpolation.
-					Demonstration of use of homogeneous coordinate transformations and
-					simple data structure for representing cube from Chapter 4.
-
-					Mouse buttons control direction of rotation.
-
-
-	Author:			E. Angel, modified by Stephen Brooks
-
-*************************************************************************************/
-
-
-
-/* include the library header files */
-#include <stdlib.h>
+﻿#include <stdio.h>
 #include <freeglut.h>
+#include <stdlib.h>
 #include "Sphere.h"
-// cube vertices
-GLfloat vertices[][3] = { {-1.0,-1.0,-1.0}, {1.0,-1.0,-1.0}, {1.0,1.0,-1.0}, {-1.0,1.0,-1.0},
-							{-1.0,-1.0, 1.0}, {1.0,-1.0, 1.0}, {1.0,1.0, 1.0}, {-1.0,1.0, 1.0} };
+#include "Stars.h"
+#include "Stars.c"
 
-// colors of the vertices
-GLfloat colors[][3] = { {0.0,0.0,0.0}, {1.0,0.0,0.0}, {1.0,1.0,0.0}, {0.0,1.0,0.0},
-							{0.0,0.0,1.0}, {1.0,0.0,1.0}, {1.0,1.0,1.0}, {0.0,1.0,1.0} };
+// Camera Parameters
+GLdouble camX = 0.0f, camY = 1.0f, camZ = 10.0f;
+float moveSpeed = 0.2f;
+
+char showLines = 1;
+char showStars = 1;
+double starCount = 500;
 
 // angle of rotation
 GLfloat theta = 0.0;
-// axis of rotation
-GLint   axis = 0;
 
+int windowWidth = 500;
+int windowHeight = 500;
 
+ColorBlend sunColour = { {1.0,1.0,0}, {1.0,0.5,0} };
 
-/************************************************************************
+ColorBlend planetColour1 = { {0.1,0.0,0.5}, {0.5,0.0,0.5} },
+		   planetColour2 = { {0.0,0.75,0.0}, {0.0,0.75,0.0} },
+		   planetColour3 = { {0.3,0.1,0.0},{0.4,0.2,0.0} },
+		   planetColour4 = { {0.0,0.1,0.5},{0.0,0.2,0.7} },
+		   planetColour5 = { {0.1,0.0,0.1},{0.0,0.1,0.3} },
+		   planetColour6 = { {0.0,0.4,0.1},{0.0,0.2,0.5} },
+		   planetColour7 = { {0.3,0.3,0.3},{0.0,0.2,0.2} };
 
-	Function:		polygon
+ColorBlend moonColour1 = { {0.5,0.5,0.5},{0.4,0.4,0.4} },
+		   moonColour2 = { {0.2,0.1,0.0},{0.3,0.2,0.0} },
+		   moonColour3 = { {0.75,0.75,0.75},{0.0,0.0,0.7} };
 
-	Description:	Draw a polygon via list of vertices.
-
-*************************************************************************/
-void polygon(int a, int b, int c, int d)
+void updateCamera()
 {
-
-	glBegin(GL_POLYGON);
-	glColor3fv(colors[a]);
-	glVertex3fv(vertices[a]);
-
-	glColor3fv(colors[b]);
-	glVertex3fv(vertices[b]);
-
-	glColor3fv(colors[c]);
-	glVertex3fv(vertices[c]);
-
-	glColor3fv(colors[d]);
-	glVertex3fv(vertices[d]);
-	glEnd();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(camX, camY, camZ,
+		0, 0, 0,
+		0, 1, 0);
 }
-
-
-/************************************************************************
-
-	Function:		colorcube
-
-	Description:	Map the vertices to cube faces.
-
-*************************************************************************/
-void colorcube()
-{
-	polygon(0, 3, 2, 1);
-	polygon(2, 3, 7, 6);
-	polygon(0, 4, 7, 3);
-	polygon(1, 2, 6, 5);
-	polygon(4, 5, 6, 7);
-	polygon(0, 1, 5, 4);
-}
-
-
-/************************************************************************
-
-	Function:		myDisplay
-
-	Description:	Display callback, clears frame buffer and depth buffer,
-					rotates the cube and draws it.
-
-*************************************************************************/
 void myDisplay(void)
 {
+	updateCamera();
 
-	// clear the screen and depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// load the identity matrix into the model view matrix
+	if (showStars)
+	{
+		drawStars();
+	}
+
 	glLoadIdentity();
 
-	// push the current transformation state on the stack
-	glPushMatrix();
+	// set rotation for the sun
+	glRotatef(theta * 10, 0.0, 1.0, 0.0);
+	drawNormalizedSphere(sunColour, 20);
+	glPushMatrix();// Save Suns matrix used for aligning planets on the suns rotation
 
-	// rotate depending on the axis
-	switch (axis)
-	{
-	case 0:
-		glRotatef(theta, 1.0, 0.0, 0.0);
-		break;
-	case 1:
-		glRotatef(theta, 0.0, 1.0, 0.0);
-		break;
-	case 2:
-		glRotatef(theta, 0.0, 0.0, 1.0);
-		break;
-	}
-	// draw the color cube
-	drawBasicSphere();
+		glRotatef(theta * 10, 0.0, 1.0, 0.0);
+		glTranslatef(1.7, 0, 0); 
+		glScalef(0.2, 0.2, 0.2);
+		drawNormalizedSphere(planetColour1, 20);
+		glPushMatrix();//Saves Planet matrix used for aligning moons on the planets rotation
 
-	// pop the previous transformation state from the stack
-	glPopMatrix();
+			glRotatef(theta * 50, 0, 1.0, 0.0);
+			glTranslatef(2, 0, 0);
+			glScalef(0.1, 0.1, 0.1);
+			drawNormalizedSphere(moonColour1,20); //Matrix of moon1 on planet 1
 
-	// rotate it, always around X-axis
-	glRotatef(theta * 10, 1.0, 0.0, 0.0);
+		glPopMatrix();
 
-	// move it
-	glTranslatef(1.7, 0, 0);
+			glRotatef(theta * 30, 0, 1.0, 0);
+			glTranslatef(2.5, 0, -2.5);
+			glScalef(0.2, 0.2, 0.2);
+			drawNormalizedSphere(moonColour2, 20);
 
-	// scale it 
-	glScalef(0.2, 0.2, 0.2);
+		glPopMatrix();
 
-	// draw the color cube
-	drawBasicSphere();
+		glPushMatrix();
 
-	// even smaller
-	// rotate it, always around X-axis
-	glRotatef(theta * 20, 1.0, 0.0, 0.0);
+			glRotatef(theta * 5, 0.0, 1.0, 0.0);
+			glTranslatef(1, 0, -3);
+			glScalef(0.5, 0.5, 0.5);
+			drawNormalizedSphere(planetColour2, 20);
 
-	// move it
-	glTranslatef(0, 2, 0);
+		glPopMatrix();
+		
+		glPushMatrix();
 
-	// scale it 
-	glScalef(0.1, 0.1, 0.1);
+			glRotatef(theta * 10, 0.0, 1.0, 0.0);
+			glTranslatef(2, 0, 5);
+			glScalef(0.3, 0.3, 0.3);
+			drawNormalizedSphere(planetColour3, 20);
 
-	// draw the color cube
-	drawBasicSphere();
+		glPopMatrix();
+		glPushMatrix();
+
+			glRotatef(theta * 7, 0.0, 1.0, 0.0);
+			glTranslatef(2, 0, -9);
+			glScalef(0.4, 0.4, 0.4);
+			drawNormalizedSphere(planetColour4, 20);
+
+		glPopMatrix();
+		glPushMatrix();
+
+			glRotatef(theta * 20, 0.0, 1.0, 0.0);
+			glTranslatef(0.5, 0, 1);
+			glScalef(0.15, 0.15, 0.15);
+			drawNormalizedSphere(planetColour5, 20);
+
+		glPopMatrix();
+		glPushMatrix();
+
+			glRotatef(theta * 10, 0.0, 1.0, 0.0);
+			glTranslatef(-4, 0, 3);
+			glScalef(0.25, 0.25, 0.25);
+			drawNormalizedSphere(planetColour6, 20);
+
+		glPopMatrix();
+		glPushMatrix();
+
+			glRotatef(theta * 15, 0.0, 1.0, 0.0);
+			glTranslatef(7, 0, -7);
+			glScalef(0.7, 0.7, 0.7);
+			drawNormalizedSphere(planetColour7, 20);
+
+		glPopMatrix();
 
 
-	// swap the drawing buffers
+
 	glutSwapBuffers();
 }
 
 
-/************************************************************************
-
-	Function:		myIdle
-
-	Description:	Updates the animation when idle.
-
-*************************************************************************/
 void myIdle()
 {
 
 	// update the rotation around the selected axis 
 	theta += 0.01f;
 
+	if (showStars)
+	{
+		updateStars();
+	}
 	// redraw the new state
 	glutPostRedisplay();
 }
 
-
-/************************************************************************
-
-	Function:		myMouse
-
-	Description:	Selects an axis about which to rotate.
-
-*************************************************************************/
-void myMouse(int btn, int state, int x, int y)
+void keyboard(unsigned char key, int x, int y)
 {
+	switch (key)
+	{
+		case 27: //esc to exit
+			exit(0);
+		case 'w': //move forward
+			camZ += moveSpeed;
+			break;
+		case 's': //move backward
+			camZ -= moveSpeed;
+			break;
+		case 'a': //move right
+			camX -= moveSpeed;
+			break;
+		case 'd': //move left
+			camX += moveSpeed;
+			break;
+		case 'q': //move up
+			camY += moveSpeed;
+			break;
+		case 'e': //move down
+			camY -= moveSpeed;
+			break;
+		case 'r': //display lines
+			showLines = !showLines;
+			break;
+		case 't': //display twinkling stars
+			showStars = !showStars;
+			break;
+	}
 
-	// if the left mouse button, then rotate around the X-axis
-	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-		axis = 0;
-
-	// if the middle mouse button, then rotate around the Y-axis
-	if (btn == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
-		axis = 1;
-
-	// if the right mouse button, then rotate around the Z-axis
-	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
-		axis = 2;
+	glutPostRedisplay();
 }
 
-
-/************************************************************************
-
-	Function:		initializeGL
-
-	Description:	Initializes the OpenGL rendering context for display.
-
-*************************************************************************/
+//Iniatizes all basic window requirements including the camera
 void initializeGL(void)
 {
 	// enable depth testing
@@ -212,23 +199,23 @@ void initializeGL(void)
 	// load the identity matrix into the projection matrix
 	glLoadIdentity();
 
-	// set window mode to 2D orthographic 
-	glOrtho(-2.0, 2.0, -2.0, 2.0, -10, 10.0);
+	// set window mode to perspective camera
+	gluPerspective(60.0, windowWidth / windowHeight, 0.1, 100);
+
+	// set where and what the camera is looking at
+	gluLookAt(camX, camY, camZ,
+		0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0);
 
 	// change into model-view mode so that we can change the object positions
 	glMatrixMode(GL_MODELVIEW);
+
+	glLoadIdentity();
+
+	initStars(); //need to pregenerate locations of the stars
 }
 
-
-
-/************************************************************************
-
-	Function:		main
-
-	Description:	Sets up the openGL rendering context and the windowing
-					system, then begins the display loop.
-
-*************************************************************************/
+//loops for every fram
 void main(int argc, char** argv)
 {
 	// initialize the toolkit
@@ -236,7 +223,7 @@ void main(int argc, char** argv)
 	// set display mode
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	// set window size
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(windowWidth, windowHeight);
 	// set window position on screen
 	glutInitWindowPosition(100, 150);
 	// open the screen window
@@ -244,10 +231,8 @@ void main(int argc, char** argv)
 
 	// register redraw function
 	glutDisplayFunc(myDisplay);
-	// register the idle function
 	glutIdleFunc(myIdle);
-	// register the mouse button function
-	glutMouseFunc(myMouse);
+	glutKeyboardFunc(keyboard);
 
 	//initialize the rendering context
 	initializeGL();
