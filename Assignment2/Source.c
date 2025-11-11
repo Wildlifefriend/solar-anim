@@ -32,6 +32,15 @@ ColorBlend moonColour1 = { {0.5,0.5,0.5},{0.4,0.4,0.4} },
 		   moonColour2 = { {0.2,0.1,0.0},{0.3,0.2,0.0} },
 		   moonColour3 = { {0.75,0.75,0.75},{0.0,0.0,0.7} };
 
+typedef struct {
+	float x, y, z;
+} Vertex;
+
+typedef struct {
+	int v1, v2, v3;
+} Face;
+
+// When r is pressed it should showed the orbit paths of each planet
 void drawOrbit(float radius)
 {
 	if (showLines)
@@ -39,6 +48,7 @@ void drawOrbit(float radius)
 		drawOrbitRing(radius);
 	}
 }
+// is called in my display to change where the user is looking if the user pressed the movement keys
 void updateCamera()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -47,6 +57,7 @@ void updateCamera()
 		0, 0, 0,
 		0, 1, 0);
 }
+// used to call everything that needs to be drawn, specifically the planets orbiting the sun
 void myDisplay(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -151,7 +162,6 @@ void myDisplay(void)
 	glutSwapBuffers();
 }
 
-
 void myIdle()
 {
 
@@ -172,33 +182,40 @@ void keyboard(unsigned char key, int x, int y)
 	{
 		case 27: //esc to exit
 			exit(0);
-		case 'w': //move forward
-			camZ += moveSpeed;
-			break;
-		case 's': //move backward
-			camZ -= moveSpeed;
-			break;
-		case 'a': //move right
-			camX -= moveSpeed;
-			break;
-		case 'd': //move left
-			camX += moveSpeed;
-			break;
-		case 'q': //move up
-			camY += moveSpeed;
-			break;
-		case 'e': //move down
-			camY -= moveSpeed;
-			break;
 		case 'r': //display lines
 			showLines = !showLines;
 			break;
-		case 't': //display twinkling stars
+		case 's': //display twinkling stars
 			showStars = !showStars;
 			break;
 	}
 
 	glutPostRedisplay();
+}
+
+void specialKeys(int key, int x, int y)
+{
+	switch (key)
+	{
+	case GLUT_KEY_PAGE_UP: //move forward
+		camZ += moveSpeed ;
+		break;
+	case GLUT_KEY_PAGE_DOWN: //move backward
+		camZ -= moveSpeed;
+		break;
+	case GLUT_KEY_RIGHT: //move right
+		camX += moveSpeed;
+		break;
+	case GLUT_KEY_LEFT: //move left
+		camX -= moveSpeed;
+		break;
+	case GLUT_KEY_UP: //move up
+		camY += moveSpeed;
+		break;
+	case GLUT_KEY_DOWN: //move down
+		camY -= moveSpeed;
+		break;
+	}
 }
 
 //Iniatizes all basic window requirements including the camera
@@ -250,6 +267,7 @@ void main(int argc, char** argv)
 	glutDisplayFunc(myDisplay);
 	glutIdleFunc(myIdle);
 	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(specialKeys);
 
 	//initialize the rendering context
 	initializeGL();
