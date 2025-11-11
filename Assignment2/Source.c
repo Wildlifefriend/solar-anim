@@ -1,9 +1,8 @@
 ﻿#include <stdio.h>
 #include <freeglut.h>
 #include <stdlib.h>
+#include <math.h>
 #include "Sphere.h"
-#include "Stars.h"
-#include "Stars.c"
 
 // Camera Parameters
 GLdouble camX = 0.0f, camY = 1.0f, camZ = 10.0f;
@@ -33,6 +32,13 @@ ColorBlend moonColour1 = { {0.5,0.5,0.5},{0.4,0.4,0.4} },
 		   moonColour2 = { {0.2,0.1,0.0},{0.3,0.2,0.0} },
 		   moonColour3 = { {0.75,0.75,0.75},{0.0,0.0,0.7} };
 
+void drawOrbit(float radius)
+{
+	if (showLines)
+	{
+		drawOrbitRing(radius);
+	}
+}
 void updateCamera()
 {
 	glMatrixMode(GL_MODELVIEW);
@@ -43,28 +49,32 @@ void updateCamera()
 }
 void myDisplay(void)
 {
-	updateCamera();
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glLoadIdentity();
+	updateCamera();
 
 	if (showStars)
 	{
+		glDisable(GL_DEPTH_TEST); //helps to draw all the stars behind
 		drawStars();
+		glEnable(GL_DEPTH_TEST); //allows depth to be drawn again
 	}
 
-	glLoadIdentity();
+
 
 	// set rotation for the sun
 	glRotatef(theta * 10, 0.0, 1.0, 0.0);
 	drawNormalizedSphere(sunColour, 20);
 	glPushMatrix();// Save Suns matrix used for aligning planets on the suns rotation
 
+		drawOrbit(1.7);
 		glRotatef(theta * 10, 0.0, 1.0, 0.0);
 		glTranslatef(1.7, 0, 0); 
 		glScalef(0.2, 0.2, 0.2);
 		drawNormalizedSphere(planetColour1, 20);
 		glPushMatrix();//Saves Planet matrix used for aligning moons on the planets rotation
-
+			
+			drawOrbit(2);
 			glRotatef(theta * 50, 0, 1.0, 0.0);
 			glTranslatef(2, 0, 0);
 			glScalef(0.1, 0.1, 0.1);
@@ -72,6 +82,7 @@ void myDisplay(void)
 
 		glPopMatrix();
 
+			drawOrbit(sqrt(pow(2.5,2)+ pow((-2.5),2)));
 			glRotatef(theta * 30, 0, 1.0, 0);
 			glTranslatef(2.5, 0, -2.5);
 			glScalef(0.2, 0.2, 0.2);
@@ -81,15 +92,17 @@ void myDisplay(void)
 
 		glPushMatrix();
 
+			drawOrbit(sqrt(pow(7, 2) + pow((-3), 2)));
 			glRotatef(theta * 5, 0.0, 1.0, 0.0);
-			glTranslatef(1, 0, -3);
+			glTranslatef(7, 0, -3);
 			glScalef(0.5, 0.5, 0.5);
 			drawNormalizedSphere(planetColour2, 20);
 
 		glPopMatrix();
 		
 		glPushMatrix();
-
+			
+			drawOrbit(sqrt(pow(2, 2) + pow((5), 2)));
 			glRotatef(theta * 10, 0.0, 1.0, 0.0);
 			glTranslatef(2, 0, 5);
 			glScalef(0.3, 0.3, 0.3);
@@ -97,7 +110,8 @@ void myDisplay(void)
 
 		glPopMatrix();
 		glPushMatrix();
-
+			
+			drawOrbit(sqrt(pow(2, 2) + pow((-9), 2)));
 			glRotatef(theta * 7, 0.0, 1.0, 0.0);
 			glTranslatef(2, 0, -9);
 			glScalef(0.4, 0.4, 0.4);
@@ -106,6 +120,7 @@ void myDisplay(void)
 		glPopMatrix();
 		glPushMatrix();
 
+			drawOrbit(sqrt(pow(0.5, 2) + pow((1), 2)));
 			glRotatef(theta * 20, 0.0, 1.0, 0.0);
 			glTranslatef(0.5, 0, 1);
 			glScalef(0.15, 0.15, 0.15);
@@ -114,6 +129,7 @@ void myDisplay(void)
 		glPopMatrix();
 		glPushMatrix();
 
+			drawOrbit(sqrt(pow((-4), 2) + pow((3), 2)));
 			glRotatef(theta * 10, 0.0, 1.0, 0.0);
 			glTranslatef(-4, 0, 3);
 			glScalef(0.25, 0.25, 0.25);
@@ -122,6 +138,7 @@ void myDisplay(void)
 		glPopMatrix();
 		glPushMatrix();
 
+			drawOrbit(sqrt(pow(7, 2) + pow((-7), 2)));
 			glRotatef(theta * 15, 0.0, 1.0, 0.0);
 			glTranslatef(7, 0, -7);
 			glScalef(0.7, 0.7, 0.7);
